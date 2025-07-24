@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft, Settings, Star, MoreHorizontal, Home, Search, Plus, Heart, User } from "lucide-react"
 import Link from "next/link"
+import { EnhancedRateModal } from "@/components/enhanced-rate-modal"
 
 const mockUserData = {
   name: "Ethan Carter",
@@ -24,6 +25,7 @@ const recentActivity = [
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("overview")
+  const [showRateModal, setShowRateModal] = useState(false)
 
   return (
     <div className="min-h-screen bg-white pb-20">
@@ -163,8 +165,8 @@ export default function ProfilePage() {
             </button>
           </Link>
 
-          <button className="bottom-nav-item">
-            <div className="w-12 h-12 calm-button-yellow rounded-full flex items-center justify-center mb-1">
+          <button onClick={() => setShowRateModal(true)} className="bottom-nav-item">
+            <div className="w-12 h-12 bg-yellow-400 hover:bg-yellow-500 rounded-full flex items-center justify-center mb-1 shadow-lg transition-colors">
               <Plus className="h-6 w-6 text-gray-800" />
             </div>
             <span className="text-xs font-medium text-gray-800">Rate</span>
@@ -183,6 +185,9 @@ export default function ProfilePage() {
           </button>
         </div>
       </div>
+
+      {/* Rate Modal */}
+      {showRateModal && <EnhancedRateModal onClose={() => setShowRateModal(false)} />}
     </div>
   )
 }

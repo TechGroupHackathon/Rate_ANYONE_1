@@ -4,9 +4,11 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Star, MapPin, Heart, Filter } from "lucide-react"
+import { ArrowLeft, Star, MapPin, Heart, Filter, Plus, Home, User, Search } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
+import { EnhancedRateModal } from "@/components/enhanced-rate-modal"
+import { SaveToListsModal } from "@/components/save-to-lists-modal"
 
 // Mock data for different categories
 const categoryData: Record<string, any[]> = {
@@ -132,6 +134,9 @@ export default function CategoryPage() {
   const params = useParams()
   const slug = params.slug as string
   const [sortBy, setSortBy] = useState("rating")
+  const [showRateModal, setShowRateModal] = useState(false)
+  const [showSaveModal, setShowSaveModal] = useState(false)
+  const [selectedItemForSave, setSelectedItemForSave] = useState<string>("")
 
   const categoryName = slug.charAt(0).toUpperCase() + slug.slice(1)
   const items = categoryData[slug] || []
@@ -232,7 +237,17 @@ export default function CategoryPage() {
                           </p>
                         )}
                       </div>
-                      <Button variant="ghost" size="icon" className="text-gray-400 hover:text-[#FF6B6B]">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-gray-400 hover:text-[#FF6B6B]"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          setSelectedItemForSave(item.name)
+                          setShowSaveModal(true)
+                        }}
+                      >
                         <Heart className="h-5 w-5" />
                       </Button>
                     </div>
@@ -249,6 +264,58 @@ export default function CategoryPage() {
               </CardContent>
             </Card>
           ))}
+        </div>
+        {/* Rate Modal */}
+        {showRateModal && <EnhancedRateModal onClose={() => setShowRateModal(false)} />}
+
+        {/* Save to Lists Modal */}
+        {showSaveModal && (
+          <SaveToListsModal
+            itemName={selectedItemForSave}
+            onClose={() => {
+              setShowSaveModal(false)
+              setSelectedItemForSave("")
+            }}
+          />
+        )}
+      </div>
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-100 px-4 py-2 z-50">
+        <div className="flex justify-around items-center max-w-md mx-auto">
+          <Link href="/">
+            <button className="bottom-nav-item bottom-nav-inactive">
+              <Home className="h-6 w-6" />
+              <span className="text-xs font-medium">Home</span>
+            </button>
+          </Link>
+
+          <Link href="/discover">
+            <button className="bottom-nav-item bottom-nav-inactive">
+              <Search className="h-6 w-6" />
+              <span className="text-xs font-medium">Discover</span>
+            </button>
+          </Link>
+
+          <button onClick={() => setShowRateModal(true)} className="bottom-nav-item">
+            <div className="w-12 h-12 bg-yellow-400 hover:bg-yellow-500 rounded-full flex items-center justify-center mb-1 shadow-lg transition-colors">
+              <Plus className="h-6 w-6 text-gray-800" />
+            </div>
+            <span className="text-xs font-medium text-gray-800">Rate</span>
+          </button>
+
+          <Link href="/lists">
+            <button className="bottom-nav-item bottom-nav-inactive">
+              <Heart className="h-6 w-6" />
+              <span className="text-xs font-medium">Lists</span>
+            </button>
+          </Link>
+
+          <Link href="/profile">
+            <button className="bottom-nav-item bottom-nav-inactive">
+              <User className="h-6 w-6" />
+              <span className="text-xs font-medium">Profile</span>
+            </button>
+          </Link>
         </div>
       </div>
     </div>

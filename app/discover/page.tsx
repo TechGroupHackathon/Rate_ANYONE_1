@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Search, Star, MapPin, Heart, Filter, Home, User, Plus } from "lucide-react"
 import Link from "next/link"
+import { EnhancedRateModal } from "@/components/enhanced-rate-modal"
+import { SaveToListsModal } from "@/components/save-to-lists-modal"
 
 // Mock data for discover page
 const mockPlaces = [
@@ -51,6 +53,10 @@ export default function DiscoverPage() {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [sortBy, setSortBy] = useState("rating")
   const [activeTab, setActiveTab] = useState("discover")
+
+  const [showRateModal, setShowRateModal] = useState(false)
+  const [showSaveModal, setShowSaveModal] = useState(false)
+  const [selectedItemForSave, setSelectedItemForSave] = useState<string>("")
 
   const categories = ["all", "Coffee Shop", "Restaurant", "Entertainment", "Fitness", "Bakery"]
 
@@ -170,7 +176,17 @@ export default function DiscoverPage() {
                           <span className="text-gray-300">{place.location}</span>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" className="text-gray-400 hover:text-red-400">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-gray-400 hover:text-red-400"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          setSelectedItemForSave(place.name)
+                          setShowSaveModal(true)
+                        }}
+                      >
                         <Heart className="h-5 w-5" />
                       </Button>
                     </div>
@@ -205,8 +221,8 @@ export default function DiscoverPage() {
             <span className="text-xs font-medium">Discover</span>
           </button>
 
-          <button className="bottom-nav-item">
-            <div className="w-12 h-12 calm-button-yellow rounded-full flex items-center justify-center mb-1">
+          <button onClick={() => setShowRateModal(true)} className="bottom-nav-item">
+            <div className="w-12 h-12 bg-yellow-400 hover:bg-yellow-500 rounded-full flex items-center justify-center mb-1 shadow-lg transition-colors">
               <Plus className="h-6 w-6 text-gray-800" />
             </div>
             <span className="text-xs font-medium text-gray-800">Rate</span>
@@ -227,6 +243,20 @@ export default function DiscoverPage() {
           </Link>
         </div>
       </div>
+
+      {/* Rate Modal */}
+      {showRateModal && <EnhancedRateModal onClose={() => setShowRateModal(false)} />}
+
+      {/* Save to Lists Modal */}
+      {showSaveModal && (
+        <SaveToListsModal
+          itemName={selectedItemForSave}
+          onClose={() => {
+            setShowSaveModal(false)
+            setSelectedItemForSave("")
+          }}
+        />
+      )}
     </div>
   )
 }
