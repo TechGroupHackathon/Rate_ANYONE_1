@@ -1,87 +1,83 @@
-"use client"
+"use client";
 
-import { useState, useMemo } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Search, Star, MapPin, Heart, Filter, Home, User, Plus } from "lucide-react"
-import Link from "next/link"
-import { EnhancedRateModal } from "@/components/enhanced-rate-modal"
-import { SaveToListsModal } from "@/components/save-to-lists-modal"
+import { useState, useEffect, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ArrowLeft, Search, Star, Filter, Home, User, Plus, Heart, Video } from "lucide-react";
+import Link from "next/link";
+import { EnhancedRateModal } from "@/components/enhanced-rate-modal";
 
-// Mock data for discover page
-const mockPlaces = [
-  {
-    id: 1,
-    name: "The Daily Grind",
-    category: "Coffee Shop",
-    rating: 4.5,
-    reviewCount: 234,
-    location: "Downtown SF",
-    price: "$$",
-    tags: ["Cozy", "WiFi", "Good Coffee"],
-    description: "A cozy coffee shop perfect for working and meetings.",
-  },
-  {
-    id: 2,
-    name: "Bella Vista Restaurant",
-    category: "Restaurant",
-    rating: 4.8,
-    reviewCount: 456,
-    location: "North Beach",
-    price: "$$$",
-    tags: ["Italian", "Romantic", "Great View"],
-    description: "Authentic Italian cuisine with stunning city views.",
-  },
-  {
-    id: 3,
-    name: "Golden Gate Cinema",
-    category: "Entertainment",
-    rating: 4.6,
-    reviewCount: 312,
-    location: "Mission District",
-    price: "$$",
-    tags: ["IMAX", "Comfortable", "Latest Movies"],
-    description: "Premium cinema experience with latest technology.",
-  },
-]
+// Define the structure for a review, matching the backend
+interface Review {
+  id: string;
+  userId: string;
+  itemType: string;
+  rating: number;
+  caption: string;
+  media: {
+    type: "image" | "video";
+    path: string;
+  }[];
+  createdAt: string;
+}
 
 export default function DiscoverPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
-  const [sortBy, setSortBy] = useState("rating")
-  const [activeTab, setActiveTab] = useState("discover")
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [sortBy, setSortBy] = useState("rating");
+  const [showRateModal, setShowRateModal] = useState(false);
 
-  const [showRateModal, setShowRateModal] = useState(false)
-  const [showSaveModal, setShowSaveModal] = useState(false)
-  const [selectedItemForSave, setSelectedItemForSave] = useState<string>("")
+  useEffect(() => {
+    async function fetchReviews() {
+      try {
+        const response = await fetch("/api/reviews");
+        if (!response.ok) {
+          throw new Error("Failed to fetch reviews");
+        }
+        const data = await response.json();
+        setReviews(data.reviews);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchReviews();
+  }, []);
 
-  const categories = ["all", "Coffee Shop", "Restaurant", "Entertainment", "Fitness", "Bakery"]
+  const categories = useMemo(() => {
+    const allCategories = reviews.map(r => r.itemType);
+    return ["all", ...Array.from(new Set(allCategories))];
+  }, [reviews]);
 
-  const filteredAndSortedPlaces = useMemo(() => {
-    const filtered = mockPlaces.filter((place) => {
-      const matchesSearch =
-        place.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        place.description.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesCategory = selectedCategory === "all" || place.category === selectedCategory
-      return matchesSearch && matchesCategory
-    })
+  const filteredAndSortedReviews = useMemo(() => {
+    const filtered = reviews.filter((review) => {
+      const matchesSearch = review.caption.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === "all" || review.itemType === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
 
     return filtered.sort((a, b) => {
       switch (sortBy) {
         case "rating":
-          return b.rating - a.rating
-        case "reviews":
-          return b.reviewCount - a.reviewCount
-        case "name":
-          return a.name.localeCompare(b.name)
+          return b.rating - a.rating;
+        case "createdAt":
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         default:
-          return 0
+          return 0;
       }
-    })
-  }, [searchQuery, selectedCategory, sortBy])
+    });
+  }, [searchQuery, selectedCategory, sortBy, reviews]);
 
   return (
     <div className="min-h-screen bg-white pb-20">
@@ -108,7 +104,7 @@ export default function DiscoverPage() {
           <div className="relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <Input
-              placeholder="Search places, restaurants, cafes..."
+              placeholder="Search reviews by caption..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-12 h-12 bg-gray-50 border-gray-200 text-black placeholder:text-gray-500 focus:border-gray-300 rounded-xl"
@@ -122,8 +118,8 @@ export default function DiscoverPage() {
               </SelectTrigger>
               <SelectContent className="bg-white border-gray-200 rounded-xl">
                 {categories.map((category) => (
-                  <SelectItem key={category} value={category} className="text-black hover:bg-gray-50">
-                    {category === "all" ? "All Categories" : category}
+                  <SelectItem key={category} value={category} className="text-black hover:bg-gray-50 capitalize">
+                    {category.replace("_", " ")}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -137,11 +133,8 @@ export default function DiscoverPage() {
                 <SelectItem value="rating" className="text-black hover:bg-gray-50">
                   Highest Rated
                 </SelectItem>
-                <SelectItem value="reviews" className="text-black hover:bg-gray-50">
-                  Most Reviews
-                </SelectItem>
-                <SelectItem value="name" className="text-black hover:bg-gray-50">
-                  Name A-Z
+                <SelectItem value="createdAt" className="text-black hover:bg-gray-50">
+                  Most Recent
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -149,60 +142,46 @@ export default function DiscoverPage() {
         </div>
 
         {/* Results */}
-        <div className="space-y-4">
-          <p className="text-gray-600">{filteredAndSortedPlaces.length} places found</p>
-
-          {filteredAndSortedPlaces.map((place) => (
-            <Card key={place.id} className="calm-card border-0 hover:shadow-lg transition-all">
-              <CardContent className="p-6">
-                <div className="flex space-x-6">
-                  <div className="w-24 h-24 bg-gray-800 rounded-xl flex-shrink-0"></div>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold text-white text-xl mb-2">{place.name}</h3>
-                        <div className="flex items-center space-x-3 mb-2">
-                          <div className="flex items-center">
-                            <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
-                            <span className="font-medium text-white">{place.rating}</span>
+        <div>
+          {isLoading ? (
+            <p>Loading reviews...</p>
+          ) : (
+            <>
+              <p className="text-gray-600 mb-4">{filteredAndSortedReviews.length} reviews found</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredAndSortedReviews.map((review) => (
+                  <Card key={review.id} className="overflow-hidden">
+                    <CardContent className="p-0">
+                       <div className="aspect-square w-full bg-gray-100">
+                          {review.media && review.media.length > 0 && (
+                            review.media[0].type === 'image' ? (
+                              <img src={`/${review.media[0].path}`} alt={review.caption} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                                <Video className="h-16 w-16 text-white" />
+                              </div>
+                            )
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <div className="flex items-center mb-2">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-4 w-4 ${i < review.rating ? "text-yellow-500 fill-current" : "text-gray-400"}`}
+                              />
+                            ))}
                           </div>
-                          <span className="text-gray-500">•</span>
-                          <span className="text-gray-300">{place.reviewCount} reviews</span>
-                          <span className="text-gray-500">•</span>
-                          <span className="text-gray-300">{place.price}</span>
+                          <p className="text-gray-700 text-sm font-semibold line-clamp-2">{review.caption}</p>
+                          <p className="text-gray-500 text-xs mt-1 capitalize">{review.itemType.replace("_", " ")}</p>
+                          <p className="text-gray-500 text-xs mt-2">{new Date(review.createdAt).toLocaleDateString()}</p>
                         </div>
-                        <div className="flex items-center space-x-2 mb-3">
-                          <MapPin className="h-4 w-4 text-gray-400" />
-                          <span className="text-gray-300">{place.location}</span>
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-gray-400 hover:text-red-400"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          setSelectedItemForSave(place.name)
-                          setShowSaveModal(true)
-                        }}
-                      >
-                        <Heart className="h-5 w-5" />
-                      </Button>
-                    </div>
-                    <p className="text-gray-300 mb-3">{place.description}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {place.tags.map((tag, index) => (
-                        <Badge key={index} variant="secondary" className="bg-gray-700 text-gray-200 hover:bg-gray-600">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -244,19 +223,7 @@ export default function DiscoverPage() {
         </div>
       </div>
 
-      {/* Rate Modal */}
       {showRateModal && <EnhancedRateModal onClose={() => setShowRateModal(false)} />}
-
-      {/* Save to Lists Modal */}
-      {showSaveModal && (
-        <SaveToListsModal
-          itemName={selectedItemForSave}
-          onClose={() => {
-            setShowSaveModal(false)
-            setSelectedItemForSave("")
-          }}
-        />
-      )}
     </div>
-  )
+  );
 }

@@ -1,31 +1,64 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Settings, Star, MoreHorizontal, Home, Search, Plus, Heart, User } from "lucide-react"
-import Link from "next/link"
-import { EnhancedRateModal } from "@/components/enhanced-rate-modal"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Settings, Star, MoreHorizontal, Home, Search, Plus, Heart, User, Video } from "lucide-react";
+import Link from "next/link";
+import { EnhancedRateModal } from "@/components/enhanced-rate-modal";
+import { userSession } from "@/lib/userAuth";
 
-const mockUserData = {
-  name: "Ethan Carter",
-  location: "San Francisco, CA",
-  rating: 4.8,
-  totalRatings: 123,
-  followers: 1234,
-  following: 567,
+// Define the structure for a review, matching the backend
+interface Review {
+  id: string;
+  userId: string;
+  itemType: string;
+  rating: number;
+  caption: string;
+  media: {
+    type: "image" | "video";
+    path: string;
+  }[];
+  createdAt: string;
 }
 
-const recentActivity = [
-  { id: 1, name: "The Daily Grind", rating: 4.5, date: "2 days ago" },
-  { id: 2, name: "Inception", rating: 5, date: "1 week ago" },
-  { id: 3, name: "Bella Vista", rating: 4.2, date: "2 weeks ago" },
-]
-
 export default function ProfilePage() {
-  const [activeTab, setActiveTab] = useState("overview")
-  const [showRateModal, setShowRateModal] = useState(false)
+  const [activeTab, setActiveTab] = useState("overview");
+  const [showRateModal, setShowRateModal] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loggedInUser = userSession.getUser();
+    setUser(loggedInUser);
+
+    async function fetchReviews() {
+      try {
+        const response = await fetch("/api/reviews");
+        if (!response.ok) {
+          throw new Error("Failed to fetch reviews");
+        }
+        const data = await response.json();
+        // Filter reviews for the current user
+        const userReviews = data.reviews.filter((review: Review) => review.userId === loggedInUser?.id);
+        setReviews(userReviews);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    if (loggedInUser) {
+      fetchReviews();
+    } else {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const displayName = user ? user.name : "Guest";
 
   return (
     <div className="min-h-screen bg-white pb-20">
@@ -50,40 +83,15 @@ export default function ProfilePage() {
         {/* Profile Header */}
         <div className="flex items-start space-x-6 mb-8">
           <div className="w-24 h-24 bg-black rounded-full flex items-center justify-center text-2xl font-bold text-white">
-            EC
+            {displayName.charAt(0).toUpperCase()}
           </div>
           <div className="flex-1">
-            <h2 className="text-3xl font-bold text-black mb-2">{mockUserData.name}</h2>
-            <p className="text-gray-600 mb-4">{mockUserData.location}</p>
+            <h2 className="text-3xl font-bold text-black mb-2">{displayName}</h2>
             <div className="flex items-center space-x-6 mb-6">
               <div className="text-center">
-                <div className="text-xl font-bold text-black">{mockUserData.totalRatings}</div>
+                <div className="text-xl font-bold text-black">{reviews.length}</div>
                 <div className="text-sm text-gray-600">Reviews</div>
               </div>
-              <div className="text-center">
-                <div className="text-xl font-bold text-black">{mockUserData.followers}</div>
-                <div className="text-sm text-gray-600">Followers</div>
-              </div>
-              <div className="text-center">
-                <div className="text-xl font-bold text-black">{mockUserData.following}</div>
-                <div className="text-sm text-gray-600">Following</div>
-              </div>
-              <div className="flex items-center">
-                <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
-                <span className="text-lg font-bold text-black">{mockUserData.rating}</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button className="calm-button-olive px-6 py-2 rounded-full">Follow</Button>
-              <Button
-                variant="outline"
-                className="calm-button-yellow px-6 py-2 rounded-full border-gray-200 bg-transparent"
-              >
-                Message
-              </Button>
-              <Button variant="ghost" size="icon" className="text-gray-600 hover:text-black">
-                <MoreHorizontal className="h-5 w-5" />
-              </Button>
             </div>
           </div>
         </div>
@@ -101,49 +109,16 @@ export default function ProfilePage() {
               value="reviews"
               className="data-[state=active]:bg-white data-[state=active]:text-black text-gray-600 rounded-lg px-4 py-2"
             >
-              Reviews
-            </TabsTrigger>
-            <TabsTrigger
-              value="lists"
-              className="data-[state=active]:bg-white data-[state=active]:text-black text-gray-600 rounded-lg px-4 py-2"
-            >
-              Lists
+              Reviews ({reviews.length})
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-bold text-black mb-4">Recent Activity</h3>
-                <div className="space-y-3">
-                  {recentActivity.map((item) => (
-                    <Card key={item.id} className="calm-card cursor-pointer group border-0">
-                      <CardContent className="p-4 flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-gray-800 rounded-lg"></div>
-                        <div className="flex-1">
-                          <h4 className="font-medium text-white group-hover:text-gray-300 transition-colors">
-                            {item.name}
-                          </h4>
-                          <div className="flex items-center space-x-2">
-                            <div className="flex items-center">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`h-3 w-3 ${
-                                    i < item.rating ? "text-yellow-400 fill-current" : "text-gray-600"
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                            <span className="text-sm text-gray-300">{item.date}</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            </div>
+             <h3 className="text-xl font-bold text-black mb-4">My Reviews</h3>
+             <ReviewsGrid reviews={reviews} isLoading={isLoading} />
+          </TabsContent>
+          <TabsContent value="reviews" className="mt-6">
+            <ReviewsGrid reviews={reviews} isLoading={isLoading} />
           </TabsContent>
         </Tabs>
       </div>
@@ -186,8 +161,63 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Rate Modal */}
-      {showRateModal && <EnhancedRateModal onClose={() => setShowRateModal(false)} />}
+      {showRateModal && <EnhancedRateModal onClose={() => {
+        setShowRateModal(false);
+        // Refresh reviews after modal closes
+        const loggedInUser = userSession.getUser();
+        if (loggedInUser) {
+            setIsLoading(true);
+            fetch("/api/reviews").then(res => res.json()).then(data => {
+                const userReviews = data.reviews.filter((review: Review) => review.userId === loggedInUser?.id);
+                setReviews(userReviews);
+                setIsLoading(false);
+            });
+        }
+      }} />}
     </div>
-  )
+  );
+}
+
+function ReviewsGrid({ reviews, isLoading }: { reviews: Review[], isLoading: boolean }) {
+  if (isLoading) {
+    return <p>Loading reviews...</p>;
+  }
+
+  if (reviews.length === 0) {
+    return <p>No reviews found. Why not add one?</p>;
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {reviews.map(review => (
+        <Card key={review.id} className="overflow-hidden">
+          <CardContent className="p-0">
+            <div className="aspect-square w-full bg-gray-100">
+              {review.media && review.media.length > 0 && (
+                review.media[0].type === 'image' ? (
+                  <img src={`/${review.media[0].path}`} alt={review.caption} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                    <Video className="h-16 w-16 text-white" />
+                  </div>
+                )
+              )}
+            </div>
+            <div className="p-4">
+              <div className="flex items-center mb-2">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`h-4 w-4 ${i < review.rating ? "text-yellow-500 fill-current" : "text-gray-400"}`}
+                  />
+                ))}
+              </div>
+              <p className="text-gray-700 text-sm line-clamp-2">{review.caption}</p>
+              <p className="text-gray-500 text-xs mt-2">{new Date(review.createdAt).toLocaleDateString()}</p>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
 }

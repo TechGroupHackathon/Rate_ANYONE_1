@@ -1,50 +1,94 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Star } from "lucide-react"
+import { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Star, X, Paperclip, Video } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface EnhancedRateModalProps {
-  onClose: () => void
+  onClose: () => void;
 }
 
+const categories = ["Restaurant", "Movie", "Coffee Shop", "Book", "Product", "Other"];
+
 export function EnhancedRateModal({ onClose }: EnhancedRateModalProps) {
-  const [rating, setRating] = useState(3)
-  const [caption, setCaption] = useState("")
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [visibility, setVisibility] = useState("public")
-  const [allowComments, setAllowComments] = useState(true)
-  const [uploadedImages, setUploadedImages] = useState<string[]>([])
+  const [rating, setRating] = useState(3);
+  const [caption, setCaption] = useState("");
+  const [category, setCategory] = useState("");
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const availableTags = ["Clean place", "Budget-friendly", "Cozy", "Loud", "Staff", "Music", "Parking"]
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null);
+    const files = Array.from(event.target.files || []);
 
-  const sampleImages = [
-    "/placeholder.svg?height=120&width=120",
-    "/placeholder.svg?height=120&width=120",
-    "/placeholder.svg?height=120&width=120",
-  ]
+    if (files.length + mediaFiles.length > 3) {
+      setError("You can upload a maximum of 3 files.");
+      return;
+    }
 
-  const toggleTag = (tag: string) => {
-    setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
-  }
+    const validFiles = files.filter(file => {
+      const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB
+      if (!isValidSize) {
+        setError(`File "${file.name}" exceeds the 10MB size limit.`);
+      }
+      return isValidSize;
+    });
 
-  const handleImageUpload = () => {
-    // Simulate image upload
-    setUploadedImages(sampleImages)
-  }
+    setMediaFiles(prevFiles => [...prevFiles, ...validFiles]);
+  };
 
-  const handleSubmit = () => {
-    // Here you would normally save the rating data
-    console.log("Rating submitted:", {
-      rating,
-      caption,
-      selectedTags,
-      visibility,
-      allowComments,
-      uploadedImages,
-    })
-    onClose()
-  }
+  const handleRemoveFile = (index: number) => {
+    setMediaFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async () => {
+    if (mediaFiles.length === 0) {
+      setError("Please upload at least one image or video.");
+      return;
+    }
+    if (!category) {
+      setError("Please select a category.");
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+
+    const formData = new FormData();
+    formData.append("caption", caption);
+    formData.append("rating", rating.toString());
+    formData.append("category", category);
+    mediaFiles.forEach(file => {
+      formData.append("media", file);
+    });
+
+    try {
+      const response = await fetch("/api/reviews", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Something went wrong");
+      }
+
+      console.log("Review submitted successfully");
+      onClose();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -54,40 +98,69 @@ export function EnhancedRateModal({ onClose }: EnhancedRateModalProps) {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-black">Rate Your Moment</h2>
             <Button variant="ghost" size="icon" onClick={onClose} className="text-gray-400 hover:text-black">
-              <span className="text-xl">×</span>
+              <X className="h-5 w-5" />
             </Button>
           </div>
 
-          {/* Capture Experience */}
+          {/* Media Upload */}
           <div className="mb-6">
             <h3 className="font-medium text-black mb-3">Capture Experience</h3>
-            <div className="flex space-x-3 mb-4">
-              <Button
-                onClick={handleImageUpload}
-                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white rounded-full py-2"
-              >
-                📷 Upload Photo
-              </Button>
-              <Button
-                variant="outline"
-                className="flex-1 border-gray-300 text-gray-700 rounded-full py-2 bg-transparent"
-              >
-                📷 Snap Live
-              </Button>
-            </div>
-
-            {/* Image Gallery */}
-            {uploadedImages.length > 0 && (
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                {uploadedImages.map((image, index) => (
-                  <div key={index} className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-xs">
-                      Image {index + 1}
+            <input
+              type="file"
+              multiple
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/mov"
+              className="hidden"
+            />
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-full py-2"
+              disabled={mediaFiles.length >= 3}
+            >
+              <Paperclip className="h-4 w-4 mr-2" />
+              Upload Media ({mediaFiles.length}/3)
+            </Button>
+            
+            <div className="grid grid-cols-3 gap-2 mt-4">
+              {mediaFiles.map((file, index) => (
+                <div key={index} className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                  {file.type.startsWith("image/") ? (
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt="preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-gray-200">
+                      <Video className="h-8 w-8 text-gray-500" />
+                      <span className="text-xs text-gray-500 mt-1 px-1 text-center truncate">{file.name}</span>
                     </div>
-                  </div>
+                  )}
+                  <button
+                    onClick={() => handleRemoveFile(index)}
+                    className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Category */}
+          <div className="mb-6">
+            <h3 className="font-medium text-black mb-3">Select a Category</h3>
+            <Select onValueChange={setCategory} value={category}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Choose a category..." />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map(cat => (
+                  <SelectItem key={cat} value={cat.toLowerCase().replace(" ", "_")}>{cat}</SelectItem>
                 ))}
-              </div>
-            )}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Caption */}
@@ -101,36 +174,9 @@ export function EnhancedRateModal({ onClose }: EnhancedRateModalProps) {
             />
           </div>
 
-          {/* Contextual Tags */}
-          <div className="mb-6">
-            <h3 className="font-medium text-black mb-3">Add Contextual Tags (Optional Chips)</h3>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {availableTags.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => toggleTag(tag)}
-                  className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                    selectedTags.includes(tag)
-                      ? "bg-yellow-400 text-gray-800"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
-              <button className="px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-700 hover:bg-gray-200">
-                Add Tag
-              </button>
-            </div>
-          </div>
-
           {/* Rating Bar */}
           <div className="mb-6">
-            <h3 className="font-medium text-black mb-3">Rating Bar (Optional)</h3>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">Would you rate this out of 5?</span>
-              <span className="text-lg font-bold text-black">{rating}</span>
-            </div>
+            <h3 className="font-medium text-black mb-3">Rating Bar</h3>
             <div className="flex items-center space-x-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
@@ -142,61 +188,20 @@ export function EnhancedRateModal({ onClose }: EnhancedRateModalProps) {
                 />
               ))}
             </div>
-            <div className="mt-2 h-2 bg-gray-200 rounded-full">
-              <div
-                className="h-full bg-blue-500 rounded-full transition-all"
-                style={{ width: `${(rating / 5) * 100}%` }}
-              />
-            </div>
           </div>
-
-          {/* Audience & Visibility */}
-          <div className="mb-6">
-            <h3 className="font-medium text-black mb-3">Audience & Visibility</h3>
-            <div className="flex space-x-2 mb-4">
-              {[
-                { key: "public", label: "🌐 Public" },
-                { key: "followers", label: "👥 Followers" },
-                { key: "private", label: "🔒 Private Log" },
-              ].map((option) => (
-                <button
-                  key={option.key}
-                  onClick={() => setVisibility(option.key)}
-                  className={`px-3 py-2 rounded-full text-sm transition-colors ${
-                    visibility === option.key
-                      ? "bg-yellow-400 text-gray-800"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">Allow comments</span>
-              <button
-                onClick={() => setAllowComments(!allowComments)}
-                className={`w-12 h-6 rounded-full transition-colors ${allowComments ? "bg-blue-500" : "bg-gray-300"}`}
-              >
-                <div
-                  className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                    allowComments ? "translate-x-6" : "translate-x-0.5"
-                  }`}
-                />
-              </button>
-            </div>
-          </div>
+          
+          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
           {/* Submit Button */}
           <Button
             onClick={handleSubmit}
+            disabled={isSubmitting || mediaFiles.length === 0 || !category}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-full font-medium"
           >
-            🎉 Share Your Experience
+            {isSubmitting ? "Submitting..." : "🎉 Share Your Experience"}
           </Button>
         </div>
       </div>
     </div>
-  )
+  );
 }

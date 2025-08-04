@@ -6,6 +6,13 @@
       "password": "demo123",
       "createdAt": "2025-01-20T10:00:00.000Z",
       "lastLogin": "2025-01-20T10:00:00.000Z"
+    },
+    {
+      "id": "1754297295797",
+      "name": "adityakumbhar038@gmail.com",
+      "password": "aditya2006",
+      "createdAt": "2025-08-04T08:48:15.797Z",
+      "lastLogin": "2025-08-04T10:55:21.953Z"
     }
   ]
 }

@@ -40,6 +40,7 @@ RateIT is a minimalist but addictive web platform where users can rate, review, 
 
 ### 📝 Rating & Review System
 - **1-5 star rating system** with visual feedback
+- **Media Uploads**: Users can upload up to 3 images (JPG, PNG, WebP) or videos (MP4, WebM, MOV) per review, with a 10MB size limit per file. Uploaded media is stored locally in the `assets/reviews` directory, organized by a unique review ID.
 - **Photo upload** capabilities (Upload Photo / Snap Live)
 - **Caption/feedback** text area for detailed reviews
 - **Contextual tags** (chips) for quick categorization

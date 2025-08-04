@@ -1,0 +1,82 @@
+{
+  "reviews": [
+    {
+      "id": "9b2476b9-85e3-4ffe-85cb-ce5f23bfbf9a",
+      "userId": "1",
+      "itemId": "1",
+      "itemType": "placeholder",
+      "rating": 4,
+      "caption": "nice",
+      "media": [
+        {
+          "type": "image",
+          "filename": "image1.png",
+          "path": "assets/reviews/9b2476b9-85e3-4ffe-85cb-ce5f23bfbf9a/image1.png",
+          "uploadedAt": "2025-08-04T10:09:32.846Z"
+        },
+        {
+          "type": "image",
+          "filename": "image2.png",
+          "path": "assets/reviews/9b2476b9-85e3-4ffe-85cb-ce5f23bfbf9a/image2.png",
+          "uploadedAt": "2025-08-04T10:09:32.868Z"
+        },
+        {
+          "type": "image",
+          "filename": "image3.png",
+          "path": "assets/reviews/9b2476b9-85e3-4ffe-85cb-ce5f23bfbf9a/image3.png",
+          "uploadedAt": "2025-08-04T10:09:32.881Z"
+        }
+      ],
+      "createdAt": "2025-08-04T10:09:32.881Z",
+      "updatedAt": "2025-08-04T10:09:32.881Z"
+    },
+    {
+      "id": "48f127c7-361b-4c8e-9ce3-52b8cd84751c",
+      "userId": "1",
+      "itemId": "1",
+      "itemType": "coffee_shop",
+      "rating": 5,
+      "caption": "nice coffee",
+      "media": [
+        {
+          "type": "image",
+          "filename": "image1.png",
+          "path": "assets/reviews/48f127c7-361b-4c8e-9ce3-52b8cd84751c/image1.png",
+          "uploadedAt": "2025-08-04T10:37:45.904Z"
+        },
+        {
+          "type": "image",
+          "filename": "image2.png",
+          "path": "assets/reviews/48f127c7-361b-4c8e-9ce3-52b8cd84751c/image2.png",
+          "uploadedAt": "2025-08-04T10:37:45.908Z"
+        },
+        {
+          "type": "image",
+          "filename": "image3.png",
+          "path": "assets/reviews/48f127c7-361b-4c8e-9ce3-52b8cd84751c/image3.png",
+          "uploadedAt": "2025-08-04T10:37:45.924Z"
+        }
+      ],
+      "createdAt": "2025-08-04T10:37:45.924Z",
+      "updatedAt": "2025-08-04T10:37:45.924Z"
+    },
+    {
+      "id": "fa03c270-c016-4aeb-aa75-187daea215f3",
+      "userId": "1",
+      "itemId": "1",
+      "itemType": "coffee_shop",
+      "rating": 2,
+      "caption": "ADI",
+      "media": [
+        {
+          "type": "image",
+          "filename": "image1.png",
+          "path": "assets/reviews/fa03c270-c016-4aeb-aa75-187daea215f3/image1.png",
+          "uploadedAt": "2025-08-04T11:26:18.647Z"
+        }
+      ],
+      "createdAt": "2025-08-04T11:26:18.648Z",
+      "updatedAt": "2025-08-04T11:26:18.648Z"
+    }
+  ]
+}
