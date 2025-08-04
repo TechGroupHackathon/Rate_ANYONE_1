@@ -1,21 +1,65 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { ArrowLeft, Plus, Heart, Coffee, Film, Home, Search, User } from "lucide-react"
-import Link from "next/link"
-import { EnhancedRateModal } from "@/components/enhanced-rate-modal"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Plus, Heart, Home, Search, User } from "lucide-react";
+import Link from "next/link";
+import { EnhancedRateModal } from "@/components/enhanced-rate-modal";
+import { ReviewCard } from "@/components/review-card";
+import { userSession } from "@/lib/userAuth";
 
-const mockLists = [
-  { id: 1, name: "Best Coffee Shops in SF", itemCount: 8, icon: Coffee },
-  { id: 2, name: "Must-Watch Movies 2024", itemCount: 12, icon: Film },
-  { id: 3, name: "Hidden Restaurant Gems", itemCount: 7, icon: Heart },
-]
+// Define the structure for a review, matching the backend
+interface Review {
+  id: string;
+  userId: string;
+  itemType: string;
+  rating: number;
+  caption: string;
+  media: {
+    type: "image" | "video";
+    path: string;
+  }[];
+  createdAt: string;
+}
 
 export default function ListsPage() {
-  const [showNewListModal, setShowNewListModal] = useState(false)
-  const [showRateModal, setShowRateModal] = useState(false)
+  const [savedReviews, setSavedReviews] = useState<Review[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showRateModal, setShowRateModal] = useState(false);
+
+  useEffect(() => {
+    async function fetchSavedReviews() {
+      setIsLoading(true);
+      const user = userSession.getUser();
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const savedResponse = await fetch(`/api/saved?userId=${user.id}`);
+        if (!savedResponse.ok) throw new Error("Failed to fetch saved list");
+        const savedData = await savedResponse.json();
+        const savedIds = savedData.saved;
+
+        if (savedIds.length > 0) {
+          const reviewsResponse = await fetch("/api/reviews");
+          if (!reviewsResponse.ok) throw new Error("Failed to fetch reviews");
+          const reviewsData = await reviewsResponse.json();
+          const allReviews = reviewsData.reviews;
+
+          const userSavedReviews = allReviews.filter((review: Review) => savedIds.includes(review.id));
+          setSavedReviews(userSavedReviews);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchSavedReviews();
+  }, []);
 
   return (
     <div className="min-h-screen bg-white pb-20">
@@ -27,38 +71,17 @@ export default function ListsPage() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold text-black">Your Lists</h1>
+          <h1 className="text-2xl font-bold text-black">Your Saved Reviews</h1>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-6">
-        {/* Header Section */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-3xl font-bold text-black mb-2">Made for you</h2>
-            <p className="text-gray-600">Your personal collections</p>
-          </div>
-          <Button onClick={() => setShowNewListModal(true)} className="calm-button-olive px-6 py-3 rounded-full">
-            <Plus className="h-5 w-5 mr-2" />
-            Create List
-          </Button>
-        </div>
-
-        {/* Lists Grid */}
-        {mockLists.length > 0 ? (
+        {isLoading ? (
+          <p>Loading saved reviews...</p>
+        ) : savedReviews.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockLists.map((list) => (
-              <Card key={list.id} className="calm-card cursor-pointer group border-0">
-                <CardContent className="p-6">
-                  <div className="w-full h-40 bg-gray-800 rounded-xl mb-4 flex items-center justify-center">
-                    <list.icon className="h-16 w-16 text-white" />
-                  </div>
-                  <h3 className="font-semibold text-white mb-2 group-hover:text-gray-300 transition-colors">
-                    {list.name}
-                  </h3>
-                  <p className="text-gray-300 text-sm">{list.itemCount} items</p>
-                </CardContent>
-              </Card>
+            {savedReviews.map((review) => (
+              <ReviewCard key={review.id} review={review} isInitiallySaved={true} />
             ))}
           </div>
         ) : (
@@ -66,13 +89,15 @@ export default function ListsPage() {
             <div className="w-32 h-32 bg-gray-100 rounded-full mx-auto mb-6 flex items-center justify-center">
               <Heart className="h-16 w-16 text-gray-400" />
             </div>
-            <h3 className="text-2xl font-bold text-black mb-4">Create your first list</h3>
+            <h3 className="text-2xl font-bold text-black mb-4">No saved reviews yet</h3>
             <p className="text-gray-600 mb-8 max-w-md mx-auto">
-              Lists make it easy to save your favorite places and share them with friends.
+              Tap the heart icon on any review to save it to your list.
             </p>
-            <Button onClick={() => setShowNewListModal(true)} className="calm-button-olive px-8 py-3 rounded-full">
-              Create List
-            </Button>
+            <Link href="/discover">
+              <Button className="calm-button-olive px-8 py-3 rounded-full">
+                Discover Reviews
+              </Button>
+            </Link>
           </div>
         )}
       </div>
@@ -118,5 +143,5 @@ export default function ListsPage() {
       {/* Rate Modal */}
       {showRateModal && <EnhancedRateModal onClose={() => setShowRateModal(false)} />}
     </div>
-  )
+  );
 }

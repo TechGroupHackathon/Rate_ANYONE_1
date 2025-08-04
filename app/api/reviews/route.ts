@@ -11,6 +11,7 @@ interface Review {
   itemType: string;
   rating: number;
   caption: string;
+  keywords?: string[];
   media: {
     type: "image" | "video";
     filename: string;
@@ -26,7 +27,7 @@ interface ReviewsDatabase {
 }
 
 const REVIEWS_DB_PATH = path.join(process.cwd(), "Db", "reviews.json");
-const UPLOAD_DIR = path.join(process.cwd(), "assets", "reviews");
+const UPLOAD_DIR = path.join(process.cwd(), "public", "reviews");
 
 // Helper function to read the reviews database
 async function readReviews(): Promise<ReviewsDatabase> {
@@ -53,6 +54,7 @@ export async function POST(request: NextRequest) {
     const caption = formData.get("caption") as string || "";
     const rating = formData.get("rating") as string || "0";
     const category = formData.get("category") as string || "other";
+    const keywords = formData.get("keywords") as string || "";
     const mediaFiles = formData.getAll("media") as File[];
 
     if (mediaFiles.length === 0 || mediaFiles.every(f => f.size === 0)) {
@@ -79,14 +81,15 @@ export async function POST(request: NextRequest) {
       mediaMetadata.push({
         type: fileType,
         filename: newFilename,
-        path: path.join("assets", "reviews", reviewId, newFilename).replace(/\\/g, "/"),
+        path: path.join("reviews", reviewId, newFilename).replace(/\\/g, "/"),
         uploadedAt: new Date().toISOString(),
       });
     }
 
+
     const newReview: Review = {
       id: reviewId,
-      userId: "1", // Placeholder
+      userId: formData.get("userId") as string,
       itemId: "1", // Placeholder
       itemType: category,
       rating: parseInt(rating, 10),
@@ -95,6 +98,10 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
+
+    if (category === "other" && keywords) {
+      newReview.keywords = keywords.split(",").map(k => k.trim());
+    }
 
     const db = await readReviews();
     db.reviews.push(newReview);

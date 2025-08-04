@@ -11,19 +11,19 @@
         {
           "type": "image",
           "filename": "image1.png",
-          "path": "assets/reviews/9b2476b9-85e3-4ffe-85cb-ce5f23bfbf9a/image1.png",
+          "path": "reviews/9b2476b9-85e3-4ffe-85cb-ce5f23bfbf9a/image1.png",
           "uploadedAt": "2025-08-04T10:09:32.846Z"
         },
         {
           "type": "image",
           "filename": "image2.png",
-          "path": "assets/reviews/9b2476b9-85e3-4ffe-85cb-ce5f23bfbf9a/image2.png",
+          "path": "reviews/9b2476b9-85e3-4ffe-85cb-ce5f23bfbf9a/image2.png",
           "uploadedAt": "2025-08-04T10:09:32.868Z"
         },
         {
           "type": "image",
           "filename": "image3.png",
-          "path": "assets/reviews/9b2476b9-85e3-4ffe-85cb-ce5f23bfbf9a/image3.png",
+          "path": "reviews/9b2476b9-85e3-4ffe-85cb-ce5f23bfbf9a/image3.png",
           "uploadedAt": "2025-08-04T10:09:32.881Z"
         }
       ],
@@ -41,19 +41,19 @@
         {
           "type": "image",
           "filename": "image1.png",
-          "path": "assets/reviews/48f127c7-361b-4c8e-9ce3-52b8cd84751c/image1.png",
+          "path": "reviews/48f127c7-361b-4c8e-9ce3-52b8cd84751c/image1.png",
           "uploadedAt": "2025-08-04T10:37:45.904Z"
         },
         {
           "type": "image",
           "filename": "image2.png",
-          "path": "assets/reviews/48f127c7-361b-4c8e-9ce3-52b8cd84751c/image2.png",
+          "path": "reviews/48f127c7-361b-4c8e-9ce3-52b8cd84751c/image2.png",
           "uploadedAt": "2025-08-04T10:37:45.908Z"
         },
         {
           "type": "image",
           "filename": "image3.png",
-          "path": "assets/reviews/48f127c7-361b-4c8e-9ce3-52b8cd84751c/image3.png",
+          "path": "reviews/48f127c7-361b-4c8e-9ce3-52b8cd84751c/image3.png",
           "uploadedAt": "2025-08-04T10:37:45.924Z"
         }
       ],
@@ -71,12 +71,69 @@
         {
           "type": "image",
           "filename": "image1.png",
-          "path": "assets/reviews/fa03c270-c016-4aeb-aa75-187daea215f3/image1.png",
+          "path": "reviews/fa03c270-c016-4aeb-aa75-187daea215f3/image1.png",
           "uploadedAt": "2025-08-04T11:26:18.647Z"
         }
       ],
       "createdAt": "2025-08-04T11:26:18.648Z",
       "updatedAt": "2025-08-04T11:26:18.648Z"
+    },
+    {
+      "id": "69a866cf-b7c7-4d59-bb20-8f2819785e57",
+      "userId": "1",
+      "itemId": "1",
+      "itemType": "other",
+      "rating": 5,
+      "caption": "Its Nice and comfy",
+      "media": [
+        {
+          "type": "image",
+          "filename": "image1.jpg",
+          "path": "reviews/69a866cf-b7c7-4d59-bb20-8f2819785e57/image1.jpg",
+          "uploadedAt": "2025-08-04T16:40:06.201Z"
+        }
+      ],
+      "createdAt": "2025-08-04T16:40:06.201Z",
+      "updatedAt": "2025-08-04T16:40:06.201Z"
+    },
+    {
+      "id": "8f12aa90-ae6a-40ab-ade5-250b5a2d9441",
+      "userId": "1754325570591",
+      "itemId": "1",
+      "itemType": "other",
+      "rating": 3,
+      "caption": "nice day at college",
+      "media": [
+        {
+          "type": "image",
+          "filename": "image1.png",
+          "path": "reviews/8f12aa90-ae6a-40ab-ade5-250b5a2d9441/image1.png",
+          "uploadedAt": "2025-08-04T16:48:58.748Z"
+        }
+      ],
+      "createdAt": "2025-08-04T16:48:58.748Z",
+      "updatedAt": "2025-08-04T16:48:58.748Z"
+    },
+    {
+      "id": "9e2a2f55-53c4-4913-942b-21294cc1ffe8",
+      "userId": "1754325570591",
+      "itemId": "1",
+      "itemType": "other",
+      "rating": 3,
+      "caption": "only 10 request are free ",
+      "media": [
+        {
+          "type": "image",
+          "filename": "image1.png",
+          "path": "reviews/9e2a2f55-53c4-4913-942b-21294cc1ffe8/image1.png",
+          "uploadedAt": "2025-08-04T17:22:40.764Z"
+        }
+      ],
+      "createdAt": "2025-08-04T17:22:40.764Z",
+      "updatedAt": "2025-08-04T17:22:40.764Z",
+      "keywords": [
+        "trae model"
+      ]
     }
   ]
 }

@@ -2,17 +2,17 @@
   "users": [
     {
       "id": "1",
-      "name": "Demo User",
-      "password": "demo123",
+      "name": "adityakumbhar038",
+      "password": "aditya2006",
       "createdAt": "2025-01-20T10:00:00.000Z",
-      "lastLogin": "2025-01-20T10:00:00.000Z"
+      "lastLogin": "2025-08-04T16:46:56.832Z"
     },
     {
-      "id": "1754297295797",
-      "name": "adityakumbhar038@gmail.com",
-      "password": "aditya2006",
-      "createdAt": "2025-08-04T08:48:15.797Z",
-      "lastLogin": "2025-08-04T10:55:21.953Z"
+      "id": "1754325570591",
+      "name": "kundan",
+      "password": "1234",
+      "createdAt": "2025-08-04T16:39:30.592Z",
+      "lastLogin": "2025-08-04T17:21:36.720Z"
     }
   ]
 }

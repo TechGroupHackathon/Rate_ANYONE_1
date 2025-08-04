@@ -11,6 +11,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { userSession } from "@/lib/userAuth";
+
 interface EnhancedRateModalProps {
   onClose: () => void;
 }
@@ -21,6 +23,7 @@ export function EnhancedRateModal({ onClose }: EnhancedRateModalProps) {
   const [rating, setRating] = useState(3);
   const [caption, setCaption] = useState("");
   const [category, setCategory] = useState("");
+  const [keywords, setKeywords] = useState("");
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,10 +65,21 @@ export function EnhancedRateModal({ onClose }: EnhancedRateModalProps) {
     setIsSubmitting(true);
     setError(null);
 
+    const user = userSession.getUser();
+    if (!user) {
+      setError("You must be logged in to post a review.");
+      setIsSubmitting(false);
+      return;
+    }
+
     const formData = new FormData();
     formData.append("caption", caption);
     formData.append("rating", rating.toString());
     formData.append("category", category);
+    formData.append("userId", user.id);
+    if (category === "other") {
+      formData.append("keywords", keywords);
+    }
     mediaFiles.forEach(file => {
       formData.append("media", file);
     });
@@ -162,6 +176,19 @@ export function EnhancedRateModal({ onClose }: EnhancedRateModalProps) {
               </SelectContent>
             </Select>
           </div>
+
+          {category === "other" && (
+            <div className="mb-6">
+              <h3 className="font-medium text-black mb-3">Add Keywords</h3>
+              <input
+                type="text"
+                value={keywords}
+                onChange={(e) => setKeywords(e.target.value)}
+                placeholder="Enter keywords separated by commas"
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-black placeholder:text-gray-500 focus:border-gray-300 focus:outline-none"
+              />
+            </div>
+          )}
 
           {/* Caption */}
           <div className="mb-6">

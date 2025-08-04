@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -11,9 +10,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Search, Star, Filter, Home, User, Plus, Heart, Video } from "lucide-react";
+import { ArrowLeft, Search, Filter, Home, User, Plus, Heart } from "lucide-react";
 import Link from "next/link";
 import { EnhancedRateModal } from "@/components/enhanced-rate-modal";
+import { ReviewCard } from "@/components/review-card";
+import { userSession } from "@/lib/userAuth";
 
 // Define the structure for a review, matching the backend
 interface Review {
@@ -22,6 +23,7 @@ interface Review {
   itemType: string;
   rating: number;
   caption: string;
+  keywords?: string[];
   media: {
     type: "image" | "video";
     path: string;
@@ -31,6 +33,7 @@ interface Review {
 
 export default function DiscoverPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [savedReviewIds, setSavedReviewIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -38,21 +41,31 @@ export default function DiscoverPage() {
   const [showRateModal, setShowRateModal] = useState(false);
 
   useEffect(() => {
-    async function fetchReviews() {
+    async function fetchData() {
+      setIsLoading(true);
       try {
-        const response = await fetch("/api/reviews");
-        if (!response.ok) {
+        const reviewsResponse = await fetch("/api/reviews");
+        if (!reviewsResponse.ok) {
           throw new Error("Failed to fetch reviews");
         }
-        const data = await response.json();
-        setReviews(data.reviews);
+        const reviewsData = await reviewsResponse.json();
+        setReviews(reviewsData.reviews);
+
+        const user = userSession.getUser();
+        if (user) {
+          const savedResponse = await fetch(`/api/saved?userId=${user.id}`);
+          if (savedResponse.ok) {
+            const savedData = await savedResponse.json();
+            setSavedReviewIds(savedData.saved);
+          }
+        }
       } catch (error) {
         console.error(error);
       } finally {
         setIsLoading(false);
       }
     }
-    fetchReviews();
+    fetchData();
   }, []);
 
   const categories = useMemo(() => {
@@ -62,7 +75,9 @@ export default function DiscoverPage() {
 
   const filteredAndSortedReviews = useMemo(() => {
     const filtered = reviews.filter((review) => {
-      const matchesSearch = review.caption.toLowerCase().includes(searchQuery.toLowerCase());
+      const lowerCaseQuery = searchQuery.toLowerCase();
+      const matchesSearch = review.caption.toLowerCase().includes(lowerCaseQuery) ||
+                            (review.keywords && review.keywords.some(k => k.toLowerCase().includes(lowerCaseQuery)));
       const matchesCategory = selectedCategory === "all" || review.itemType === selectedCategory;
       return matchesSearch && matchesCategory;
     });
@@ -104,7 +119,7 @@ export default function DiscoverPage() {
           <div className="relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <Input
-              placeholder="Search reviews by caption..."
+              placeholder="Search by caption or keyword..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-12 h-12 bg-gray-50 border-gray-200 text-black placeholder:text-gray-500 focus:border-gray-300 rounded-xl"
@@ -150,34 +165,11 @@ export default function DiscoverPage() {
               <p className="text-gray-600 mb-4">{filteredAndSortedReviews.length} reviews found</p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredAndSortedReviews.map((review) => (
-                  <Card key={review.id} className="overflow-hidden">
-                    <CardContent className="p-0">
-                       <div className="aspect-square w-full bg-gray-100">
-                          {review.media && review.media.length > 0 && (
-                            review.media[0].type === 'image' ? (
-                              <img src={`/${review.media[0].path}`} alt={review.caption} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-gray-800">
-                                <Video className="h-16 w-16 text-white" />
-                              </div>
-                            )
-                          )}
-                        </div>
-                        <div className="p-4">
-                          <div className="flex items-center mb-2">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-4 w-4 ${i < review.rating ? "text-yellow-500 fill-current" : "text-gray-400"}`}
-                              />
-                            ))}
-                          </div>
-                          <p className="text-gray-700 text-sm font-semibold line-clamp-2">{review.caption}</p>
-                          <p className="text-gray-500 text-xs mt-1 capitalize">{review.itemType.replace("_", " ")}</p>
-                          <p className="text-gray-500 text-xs mt-2">{new Date(review.createdAt).toLocaleDateString()}</p>
-                        </div>
-                    </CardContent>
-                  </Card>
+                  <ReviewCard
+                    key={review.id}
+                    review={review}
+                    isInitiallySaved={savedReviewIds.includes(review.id)}
+                  />
                 ))}
               </div>
             </>
